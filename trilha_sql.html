@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trilha SQL — Módulo 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#286AD5;
+    --primary-dark:#1E52A8;
+    --primary-light:#7FA6E8;
+    --primary-soft:rgba(40,106,213,.09);
+    --primary-soft-2:rgba(40,106,213,.16);
+    --secondary:#7CBF3F;
+    --secondary-dark:#5C9A2A;
+    --secondary-light:#A7D97E;
+    --secondary-soft:rgba(124,191,63,.12);
+    --secondary-soft-2:rgba(124,191,63,.2);
+    --tertiary:#464646;
+    --tertiary-soft:rgba(70,70,70,.08);
+    --tertiary-soft-2:rgba(70,70,70,.14);
+    --viz-primary:var(--primary);
+    --viz-secondary:var(--secondary);
+    --viz-tertiary:var(--tertiary);
+    --viz-primary-light:var(--primary-light);
+    --viz-secondary-light:var(--secondary-light);
+    --bg:#F3F7FC;
+    --card:#FFFFFF;
+    --border:#E4EAF3;
+    --text:#2B2E33;
+    --text-dim:#6B7280;
+    --text-faint:#9AA3AF;
+    --shadow-sm:0 1px 2px rgba(40,60,90,.06);
+    --shadow-md:0 10px 28px rgba(40,106,213,.09);
+    --shadow-lg:0 18px 40px rgba(40,106,213,.14);
+    --code-bg:#1B222D;
+    --code-border:#2E3948;
+    --code-text:#E7ECF3;
+    --code-key:#8FB6F2;
+    --code-str:#B7E08C;
+    --code-num:#F2C879;
+    --code-comment:#6C7A8C;
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:10px;
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    --sans:'Inter', -apple-system, sans-serif;
+    --display:'Space Grotesk', var(--sans);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ *{transition:none!important; scroll-behavior:auto!important; animation:none!important;} }
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); -webkit-font-smoothing:antialiased;}
+  .app{display:flex; min-height:100vh;}
+  ::selection{background:var(--primary-soft-2); color:var(--primary-dark);}
+
+  ::-webkit-scrollbar{width:9px; height:9px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:#CBD8EC; border-radius:8px;}
+  ::-webkit-scrollbar-thumb:hover{background:#A9C0E5;}
+
+  .reveal{opacity:0; transform:translateY(18px); transition:opacity .55s ease, transform .55s ease;}
+  .reveal.is-visible{opacity:1; transform:translateY(0);}
+
+  /* ---------- Sidebar ---------- */
+  .trail{
+    width:312px; flex-shrink:0; background:var(--card);
+    border-right:1px solid var(--border);
+    display:flex; flex-direction:column;
+    padding:28px 22px; position:sticky; top:0; height:100vh; overflow-y:auto;
+  }
+  .brand{display:flex; align-items:center; gap:11px; margin-bottom:24px;}
+  .brand-mark{
+    width:38px; height:38px; border-radius:11px; flex-shrink:0;
+    background:linear-gradient(135deg, var(--primary), var(--secondary));
+    display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-sm);
+  }
+  .brand-mark svg{width:20px; height:20px;}
+  .brand-text .eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:.13em; color:var(--primary); text-transform:uppercase; display:block;}
+  .brand-text h1{font-family:var(--display); font-size:20px; font-weight:700; margin:1px 0 0; letter-spacing:-.01em; color:var(--text);}
+
+  .search-wrap{position:relative; margin-bottom:18px;}
+  .search-wrap svg{position:absolute; left:13px; top:50%; transform:translateY(-50%); width:15px; height:15px; color:var(--text-faint);}
+  #stationSearch{
+    width:100%; padding:10px 12px 10px 36px; border-radius:11px; border:1px solid var(--border);
+    background:var(--bg); font-family:var(--sans); font-size:13px; color:var(--text); outline:none;
+  }
+  #stationSearch:focus{border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft);}
+  #stationSearch::placeholder{color:var(--text-faint);}
+
+  .stations{list-style:none; margin:0; padding:0; flex:1;}
+  .station{margin-bottom:4px;}
+  .station-btn{
+    display:flex; align-items:center; gap:12px; width:100%;
+    background:transparent; border:none; text-align:left; cursor:pointer;
+    padding:9px 10px; border-radius:13px; color:var(--text-dim);
+    transition:background .18s ease, transform .18s ease;
+  }
+  .station-btn:hover{background:var(--primary-soft); transform:translateX(2px);}
+  .station-btn:focus-visible{outline:2px solid var(--primary); outline-offset:2px;}
+  .station-node{
+    width:36px; height:36px; border-radius:10px; flex-shrink:0;
+    background:var(--tertiary-soft); border:none;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-weight:600; font-size:12.5px; color:var(--tertiary);
+    transition:all .2s ease;
+  }
+  .station.boss .station-node{background:var(--tertiary); color:#fff; font-size:15px;}
+  .station.active .station-btn{background:var(--primary-soft-2);}
+  .station.active .station-node{background:var(--primary); color:#fff; box-shadow:0 4px 10px rgba(40,106,213,.35);}
+  .station.active.boss .station-node{background:var(--tertiary); box-shadow:0 4px 10px rgba(70,70,70,.35);}
+  .station-info{display:flex; flex-direction:column; gap:4px; min-width:0; flex:1;}
+  .station-title{font-size:13.3px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .station-level{display:inline-flex; align-self:flex-start; font-family:var(--mono); font-size:9.5px; letter-spacing:.03em; padding:2px 7px; border-radius:6px; text-transform:uppercase;}
+  .lvl-easy{background:var(--secondary-soft); color:var(--secondary-dark);}
+  .lvl-mid{background:var(--primary-soft-2); color:var(--primary-dark);}
+  .lvl-boss{background:var(--tertiary-soft-2); color:var(--tertiary);}
+  .station.hidden{display:none;}
+
+  .trail-footer{padding-top:16px; border-top:1px solid var(--border); margin-top:14px;}
+  .progress-label{font-size:10.5px; color:var(--text-faint); margin-bottom:8px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.06em;}
+  .progress-bar{height:6px; background:var(--bg); border-radius:6px; overflow:hidden; margin-bottom:8px; border:1px solid var(--border);}
+  .progress-fill{height:100%; background:linear-gradient(90deg, var(--primary), var(--secondary)); border-radius:6px; transition:width .4s cubic-bezier(.4,0,.2,1);}
+  .progress-count{font-family:var(--mono); font-size:12px; color:var(--text-dim); font-weight:500;}
+
+  /* ---------- Stage ---------- */
+  .stage{flex:1; padding:0; min-width:0;}
+  .topbar{
+    position:sticky; top:0; z-index:5; background:rgba(243,247,252,.86); backdrop-filter:blur(10px);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:22px 44px; border-bottom:1px solid var(--border);
+  }
+  .topbar-title h2{font-family:var(--display); font-size:22px; font-weight:700; margin:0 0 3px; letter-spacing:-.01em;}
+  .topbar-title p{margin:0; font-size:12.5px; color:var(--text-faint);}
+  .topbar-right{display:flex; align-items:center; gap:14px;}
+  .station-pill{
+    font-family:var(--mono); font-size:12px; font-weight:600; color:var(--primary-dark);
+    background:var(--primary-soft); border:1px solid var(--primary-soft-2);
+    padding:7px 14px; border-radius:100px;
+  }
+  .avatar{
+    width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg, var(--primary), var(--secondary));
+    color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:700; font-size:13px;
+    box-shadow:var(--shadow-sm);
+  }
+
+  .stage-content{padding:32px 44px 56px; max-width:1040px;}
+
+  .stat-grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:26px;}
+  .stat-card{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg);
+    padding:20px 20px 18px; box-shadow:var(--shadow-sm);
+    transition:transform .22s ease, box-shadow .22s ease;
+  }
+  .stat-card:hover{transform:translateY(-4px); box-shadow:var(--shadow-md);}
+  .stat-icon{width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
+  .stat-icon svg{width:19px; height:19px;}
+  .stat-icon.i-primary{background:var(--primary-soft); color:var(--primary);}
+  .stat-icon.i-secondary{background:var(--secondary-soft); color:var(--secondary-dark);}
+  .stat-icon.i-tertiary{background:var(--tertiary-soft); color:var(--tertiary);}
+  .stat-value{font-family:var(--display); font-size:26px; font-weight:700; color:var(--text); letter-spacing:-.01em; line-height:1;}
+  .stat-value.text-mode{font-size:19px;}
+  .stat-label{font-size:12.5px; color:var(--text-dim); margin-top:6px; font-weight:600;}
+  .stat-caption{font-size:11.5px; color:var(--text-faint); margin-top:3px;}
+
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg);
+    padding:26px 28px; margin-bottom:20px; box-shadow:var(--shadow-sm);
+    transition:box-shadow .25s ease, border-color .25s ease;
+  }
+  .card:hover{box-shadow:var(--shadow-md);}
+  .card-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px;}
+  .card-head-left{display:flex; align-items:center; gap:11px;}
+  .card-icon{width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .card-icon svg{width:16px; height:16px;}
+  .card h3{font-family:var(--display); font-size:14.5px; font-weight:700; color:var(--text); margin:0; letter-spacing:-.005em;}
+
+  .brief p{font-size:15.5px; line-height:1.75; color:var(--text); margin:0;}
+  .inferred-tag{display:inline-flex; align-items:center; gap:5px; margin-top:12px; font-family:var(--mono); font-size:10.5px; color:var(--text-faint); border:1px dashed var(--border); padding:4px 10px; border-radius:100px;}
+
+  #copyBtn{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--primary); border:none; color:#fff;
+    font-family:var(--sans); font-size:12.5px; font-weight:600; padding:8px 15px; border-radius:100px; cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+    box-shadow:0 4px 12px rgba(40,106,213,.28);
+  }
+  #copyBtn svg{width:13px; height:13px;}
+  #copyBtn:hover{transform:translateY(-1px) scale(1.02); box-shadow:0 6px 16px rgba(40,106,213,.38);}
+  #copyBtn:active{transform:translateY(0) scale(.98);}
+  #copyBtn:focus-visible{outline:2px solid var(--primary-dark); outline-offset:2px;}
+  #copyBtn.copied{background:var(--secondary-dark); box-shadow:0 4px 12px rgba(92,154,42,.32);}
+
+  .code-block{
+    background:var(--code-bg); border:1px solid var(--code-border); border-radius:var(--radius-md);
+    padding:20px 22px; overflow-x:auto; margin:0;
+    font-family:var(--mono); font-size:13.4px; line-height:1.78; color:var(--code-text);
+  }
+  .code-block code{white-space:pre;}
+  .tok-keyword{color:var(--code-key); font-weight:600;}
+  .tok-string{color:var(--code-str);}
+  .tok-number{color:var(--code-num);}
+  .tok-comment{color:var(--code-comment); font-style:italic;}
+
+  .row-count-pill{
+    font-family:var(--mono); font-size:11.5px; font-weight:600; color:var(--primary-dark);
+    background:var(--primary-soft); padding:5px 12px; border-radius:100px; white-space:nowrap;
+  }
+
+  /* ---------- Tabs ---------- */
+  .tabs{display:flex; gap:6px; margin-bottom:20px; background:var(--bg); padding:5px; border-radius:100px; width:fit-content; border:1px solid var(--border);}
+  .tab-btn{border:none; background:transparent; padding:8px 17px; border-radius:100px; font-family:var(--sans); font-size:12.5px; font-weight:600; color:var(--text-dim); cursor:pointer; transition:all .18s ease;}
+  .tab-btn.active{background:var(--primary); color:#fff; box-shadow:0 4px 10px rgba(40,106,213,.28);}
+  .tab-btn:hover:not(.active){background:var(--primary-soft); color:var(--primary-dark);}
+  .tab-btn:focus-visible{outline:2px solid var(--primary); outline-offset:2px;}
+
+  /* ---------- Bar viz ---------- */
+  .viz-caption{font-size:12.5px; color:var(--text-faint); margin:0 0 18px;}
+  .viz-bars{display:flex; flex-direction:column; gap:15px;}
+  .bar-row-top{display:flex; align-items:center; gap:9px; margin-bottom:6px;}
+  .bar-label{font-size:13px; font-weight:600; color:var(--text); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .bar-value{font-family:var(--mono); font-size:11.5px; color:var(--text-dim); flex-shrink:0;}
+  .bar-flag{font-size:9px; font-family:var(--mono); padding:2px 8px; border-radius:100px; text-transform:uppercase; flex-shrink:0; letter-spacing:.02em;}
+  .flag-low{background:var(--tertiary-soft-2); color:var(--tertiary);}
+  .flag-price{background:var(--primary-soft-2); color:var(--primary-dark);}
+  .bar-track{height:9px; background:var(--bg); border-radius:100px; overflow:hidden; border:1px solid var(--border);}
+  .bar-fill{display:block; height:100%; border-radius:100px; background:linear-gradient(90deg, var(--primary), var(--secondary)); transition:width .7s cubic-bezier(.16,1,.3,1); width:0%;}
+  .bar-fill.flag{background:var(--tertiary);}
+
+  /* ---------- Donut viz ---------- */
+  .donut-wrap{display:flex; align-items:center; gap:26px; flex-wrap:wrap; margin-bottom:8px;}
+  .donut{width:148px; height:148px; border-radius:50%; background:var(--stops); position:relative; flex-shrink:0; box-shadow:var(--shadow-sm);}
+  .donut-hole{position:absolute; inset:16px; background:var(--card); border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:inset 0 0 0 1px var(--border);}
+  .donut-value{font-family:var(--display); font-weight:700; font-size:21px; color:var(--text); line-height:1;}
+  .donut-label{font-size:10.5px; color:var(--text-faint); margin-top:3px;}
+  .donut-legend{display:flex; flex-direction:column; gap:9px; min-width:150px;}
+  .donut-legend-item{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-dim);}
+  .donut-legend-item b{color:var(--text); margin-left:auto; font-family:var(--mono); font-weight:600;}
+  .dot{width:9px; height:9px; border-radius:50%; flex-shrink:0;}
+  .dot-primary{background:var(--primary);}
+  .dot-secondary{background:var(--secondary);}
+  .dot-tertiary{background:var(--tertiary);}
+  .dot-primary-light{background:var(--primary-light);}
+  .dot-secondary-light{background:var(--secondary-light);}
+
+  /* ---------- Region groups (chips) ---------- */
+  .region-groups{display:flex; flex-direction:column; gap:16px; margin-top:22px; padding-top:20px; border-top:1px solid var(--border);}
+  .region-group-title{font-size:12.5px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:7px; margin-bottom:9px;}
+  .region-count{color:var(--text-faint); font-weight:500;}
+  .chip-grid{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    font-family:var(--mono); font-size:12px; font-weight:600; color:var(--primary-dark);
+    background:var(--primary-soft); border:1px solid var(--primary-soft-2);
+    padding:6px 12px; border-radius:9px; transition:transform .15s ease, background .15s ease;
+  }
+  .chip:hover{transform:translateY(-2px); background:var(--primary-soft-2);}
+
+  /* ---------- Review cards ---------- */
+  .review-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;}
+  .review-card{background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-md); padding:15px 17px; transition:transform .18s ease, box-shadow .18s ease;}
+  .review-card:hover{transform:translateY(-3px); box-shadow:var(--shadow-sm);}
+  .review-stars{color:var(--tertiary); letter-spacing:2px; font-size:15px; margin-bottom:7px;}
+  .review-text{font-size:12.8px; color:var(--text-dim); line-height:1.55; margin:0;}
+  @media (max-width:640px){.review-grid{grid-template-columns:1fr;}}
+
+  /* ---------- Table pane ---------- */
+  .table-wrap{overflow:auto; max-height:380px; border-radius:var(--radius-md); border:1px solid var(--border);}
+  table{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.6px;}
+  th{
+    background:#F7FAFD; text-align:left; padding:12px 16px; color:var(--text-dim);
+    font-weight:700; border-bottom:1px solid var(--border); position:sticky; top:0; white-space:nowrap;
+    font-family:var(--sans); font-size:11.5px; text-transform:uppercase; letter-spacing:.04em;
+  }
+  td{padding:11px 16px; border-bottom:1px solid var(--border); color:var(--text); white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  tr td{transition:background .12s ease;}
+  tbody tr:hover td{background:var(--primary-soft);}
+  tbody tr:nth-child(even) td{background:#FAFCFF;}
+  tbody tr:nth-child(even):hover td{background:var(--primary-soft);}
+  .empty{color:var(--text-faint); font-style:italic;}
+  .star-val{color:var(--tertiary); font-weight:600;}
+
+  .badge{display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:100px; font-family:var(--sans); font-size:11.5px; font-weight:600;}
+  .badge::before{content:''; width:6px; height:6px; border-radius:50%; background:currentColor;}
+  .badge-secondary{background:var(--secondary-soft); color:var(--secondary-dark);}
+  .badge-primary{background:var(--primary-soft-2); color:var(--primary-dark);}
+  .badge-tertiary{background:var(--tertiary-soft-2); color:var(--tertiary);}
+
+  footer.credit{margin-top:6px; font-size:11.5px; color:var(--text-faint); font-family:var(--mono);}
+
+  @media (max-width: 980px){
+    .stat-grid{grid-template-columns:repeat(2, 1fr);}
+  }
+  @media (max-width: 860px){
+    .app{flex-direction:column;}
+    .trail{width:100%; height:auto; position:static; border-right:none; border-bottom:1px solid var(--border);}
+    .topbar{padding:18px 22px;}
+    .stage-content{padding:24px 22px 44px;}
+    .stat-grid{grid-template-columns:1fr 1fr;}
+    .donut-wrap{gap:18px;}
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <aside class="trail">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="6" rx="8" ry="3" stroke="white" stroke-width="1.8"/><path d="M4 6V18C4 19.6569 7.58172 21 12 21C16.4183 21 20 19.6569 20 18V6" stroke="white" stroke-width="1.8"/><path d="M4 12C4 13.6569 7.58172 15 12 15C16.4183 15 20 13.6569 20 12" stroke="white" stroke-width="1.8"/></svg>
+        </div>
+        <div class="brand-text">
+          <span class="eyebrow">Módulo 02</span>
+          <h1>Trilha SQL</h1>
+        </div>
+      </div>
+
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21L17 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="stationSearch" type="text" placeholder="Buscar desafio...">
+      </div>
+
+      <ul class="stations" id="stations"></ul>
+
+      <div class="trail-footer">
+        <div class="progress-label">Posição na trilha</div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-count" id="progressCount"></div>
+      </div>
+    </aside>
+
+    <main class="stage">
+      <div class="topbar">
+        <div class="topbar-title">
+          <h2 id="stageTitle"></h2>
+          <p id="stageKicker"></p>
+        </div>
+        <div class="topbar-right">
+          <span class="station-pill" id="stationPill"></span>
+          <div class="avatar">RA</div>
+        </div>
+      </div>
+
+      <div class="stage-content">
+        <section class="stat-grid">
+          <div class="stat-card reveal">
+            <div class="stat-icon i-primary">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/></svg>
+            </div>
+            <div class="stat-value" id="statTotal">0</div>
+            <div class="stat-label">Desafios na trilha</div>
+            <div class="stat-caption">Do primeiro SELECT ao boss final</div>
+          </div>
+
+          <div class="stat-card reveal">
+            <div class="stat-icon i-secondary">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 12L9.5 17.5L20 6.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="stat-value" id="statVisited">0</div>
+            <div class="stat-label">Visitados na sessão</div>
+            <div class="stat-caption">Estações já exploradas</div>
+          </div>
+
+          <div class="stat-card reveal">
+            <div class="stat-icon i-primary">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>
+            </div>
+            <div class="stat-value" id="statRows">0</div>
+            <div class="stat-label">Linhas retornadas</div>
+            <div class="stat-caption" id="statRowsCaption">Nesta consulta</div>
+          </div>
+
+          <div class="stat-card reveal">
+            <div class="stat-icon i-tertiary" id="statLevelIcon">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 3V21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M5 4H17L14 8L17 12H5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="stat-value text-mode" id="statLevel">—</div>
+            <div class="stat-label">Nível do desafio</div>
+            <div class="stat-caption">Dificuldade nesta etapa</div>
+          </div>
+        </section>
+
+        <section class="card brief reveal">
+          <div class="card-head">
+            <div class="card-head-left">
+              <div class="card-icon" style="background:var(--primary-soft); color:var(--primary);">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 3H14L19 8V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V5C5 3.9 5.9 3 7 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 3V8H19" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 12.5H15.5M8.5 15.5H15.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </div>
+              <h3>Enunciado</h3>
+            </div>
+          </div>
+          <p id="statement"></p>
+        </section>
+
+        <section class="card query reveal">
+          <div class="card-head">
+            <div class="card-head-left">
+              <div class="card-icon" style="background:var(--tertiary-soft); color:var(--tertiary);">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 8L4 12.5L9 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 8L20 12.5L15 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <h3>Query</h3>
+            </div>
+            <button id="copyBtn" type="button">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="8" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M16 8V6C16 4.9 15.1 4 14 4H6C4.9 4 4 4.9 4 6V14C4 15.1 4.9 16 6 16H8" stroke="currentColor" stroke-width="2"/></svg>
+              <span id="copyLabel">Copiar</span>
+            </button>
+          </div>
+          <pre class="code-block"><code id="sqlCode"></code></pre>
+        </section>
+
+        <section class="card result reveal">
+          <div class="card-head">
+            <div class="card-head-left">
+              <div class="card-icon" style="background:var(--secondary-soft); color:var(--secondary-dark);">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3 9H21" stroke="currentColor" stroke-width="1.8"/><path d="M9 9V20" stroke="currentColor" stroke-width="1.8"/></svg>
+              </div>
+              <h3>Resultado</h3>
+            </div>
+            <span class="row-count-pill" id="rowCount"></span>
+          </div>
+
+          <div class="tabs" id="resultTabs">
+            <button class="tab-btn active" type="button" data-tab="viz">Visão Geral</button>
+            <button class="tab-btn" type="button" data-tab="table">Tabela Completa</button>
+          </div>
+
+          <div id="vizPane"></div>
+          <div id="tablePane" style="display:none"></div>
+        </section>
+
+        <footer class="credit">Trilha SQL — Módulo 2 · Rodrigo Abreu</footer>
+      </div>
+    </main>
+  </div>
+
+<script>
+function parseNumber(s){ return parseFloat(String(s).replace(/,/g,'')); }
+
+function vizCaption(text){ return `<p class="viz-caption">${escapeHtml(text)}</p>`; }
+
+function barList(items){
+  const max = Math.max(...items.map(i => i.value), 1);
+  return `<div class="viz-bars">` + items.map((it, idx) => {
+    const isLow = it.flag === 'Estoque baixo';
+    const fillClass = isLow ? 'bar-fill flag' : 'bar-fill';
+    const flagChip = it.flag ? `<span class="bar-flag ${isLow ? 'flag-low' : 'flag-price'}">${escapeHtml(it.flag)}</span>` : '';
+    const pct = (it.value / max * 100).toFixed(1);
+    return `<div class="bar-row" style="transition-delay:${idx * 45}ms">
+      <div class="bar-row-top"><span class="bar-label">${escapeHtml(it.label)}</span>${flagChip}<span class="bar-value">${escapeHtml(it.display)}</span></div>
+      <div class="bar-track"><span class="${fillClass}" data-target="${pct}"></span></div>
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+function donut(segments, centerLabel, centerValue){
+  const total = segments.reduce((s, x) => s + x.value, 0) || 1;
+  let cum = 0;
+  const stops = segments.map(s => {
+    const start = cum / total * 360; cum += s.value; const end = cum / total * 360;
+    return `var(--viz-${s.color}) ${start}deg ${end}deg`;
+  }).join(', ');
+  const legend = segments.map(s =>
+    `<div class="donut-legend-item"><span class="dot dot-${s.color}"></span><span>${escapeHtml(s.label)}</span><b>${s.value}</b></div>`
+  ).join('');
+  return `<div class="donut-wrap">
+    <div class="donut" style="--stops:conic-gradient(${stops})"><div class="donut-hole"><span class="donut-value">${escapeHtml(String(centerValue))}</span><span class="donut-label">${escapeHtml(centerLabel)}</span></div></div>
+    <div class="donut-legend">${legend}</div>
+  </div>`;
+}
+
+function reviewGrid(rows){
+  return `<div class="review-grid">` + rows.map(r => {
+    const nota = Number(r[0]);
+    const feedback = r[1];
+    const stars = Array.from({ length: 5 }, (_, i) => i < nota ? '★' : '☆').join('');
+    return `<div class="review-card"><div class="review-stars">${stars}</div><p class="review-text">${feedback ? escapeHtml(feedback) : '<span class="empty">Sem comentário registrado</span>'}</p></div>`;
+  }).join('') + `</div>`;
+}
+
+const REGIONS = {
+  Norte: ['AC','AM','AP','PA','RO','RR','TO'],
+  Nordeste: ['AL','BA','CE','MA','PB','PE','PI','RN','SE'],
+  'Centro-Oeste': ['DF','GO','MS','MT'],
+  Sudeste: ['ES','MG','RJ','SP'],
+  Sul: ['PR','RS','SC']
+};
+const REGION_COLORS = { Norte:'secondary', Nordeste:'primary', 'Centro-Oeste':'tertiary', Sudeste:'primary-light', Sul:'secondary-light' };
+
+function regionChips(){
+  return `<div class="region-groups">` + Object.keys(REGIONS).map(name => `
+    <div class="region-group">
+      <div class="region-group-title"><span class="dot dot-${REGION_COLORS[name]}"></span>${name} <span class="region-count">(${REGIONS[name].length} estados)</span></div>
+      <div class="chip-grid">${REGIONS[name].map(uf => `<span class="chip">${uf}</span>`).join('')}</div>
+    </div>`).join('') + `</div>`;
+}
+
+const data = [
+  {
+    navTitle: "Produtos Premium",
+    title: "Produtos Premium (Acima de R$ 2.000)",
+    level: "Fácil · Filtro simples",
+    boss: false,
+    inferred: true,
+    statement: 'Liste os produtos com preço acima de R$ 2.000,00. Exiba o nome do produto (como "Produto"), a marca (como "Fabricante") e o preço (como "Valor R$"). Ordene os resultados pelo valor, do mais barato para o mais caro.',
+    sql: `SELECT
+    nome AS "Produto",
+    marca AS "Fabricante",
+    preco AS "Valor R$"
+FROM produtos
+WHERE preco > 2000
+ORDER BY preco ASC;`,
+    columns: ["Produto", "Fabricante", "Valor R$"],
+    rows: [
+      ["Roteador WiFi Max","Kingston","2,148.18"],
+      ["Cortador de Grama a Gasolina Max","Trapp","2,301.42"],
+      ["Roteador WiFi Plus","Lenovo","2,308.5"],
+      ["Fone de Ouvido com Fio Plus","Xiaomi","2,486.47"],
+      ["Banqueta Lite","Etna","2,502.08"],
+      ["Cortador de Grama a Gasolina","Black+Decker","2,512.8"],
+      ["Lego Technic Plus","Candide","2,677.05"],
+      ["Pneu Aro 14 Premium","Bosch","2,707.1"],
+      ["Carregador Wireless Basic","Samsung","2,843.56"],
+      ["Estante Lite","Tok&Stok","2,957.08"],
+      ["Abajur Plus","Buddemeyer","2,987.06"],
+      ["Bateria 70Ah Basic","Pirelli","3,221.6"],
+      ["SSD 1TB Lite","Dell","3,311.67"],
+      ["Guarda-Roupa 4 Portas","Mobly","3,673.08"],
+      ["Chinelo de Dedo Premium","Vans","3,711.37"],
+      ["Smart TV 65\" Lite","Samsung","3,766.18"],
+      ["Smart Speaker Lite","Xiaomi","3,852.72"],
+      ["Fone de Ouvido com Fio Basic","LG","3,940.09"],
+      ["Boneca Barbie Plus","Hasbro","4,042.65"],
+      ["Sofá 2 Lugares Premium","Líder","4,359.22"],
+      ["MP3 Player Pro","Mondial","4,519.67"],
+      ["Pijama Basic","Lacoste","4,553.73"],
+      ["Mini PC Pro","Logitech","4,641.78"],
+      ["Calcinha Basic","Adidas","4,679.32"],
+      ["Scarpin","Adidas","4,692.65"],
+      ["Flanela Lite","Bosch","4,703.44"],
+      ["Cama Box Solteiro Premium","Tok&Stok","4,842.93"],
+      ["Gravador de Voz Digital Plus","Philips","4,866.18"]
+    ],
+    viz: function(d){
+      const items = d.rows.map(r => ({ label: r[0], value: parseNumber(r[2]), display: 'R$ ' + r[2] }))
+        .sort((a, b) => b.value - a.value).slice(0, 8);
+      return vizCaption(`Top 8 produtos mais caros, de ${d.rows.length} encontrados acima de R$ 2.000`) + barList(items);
+    }
+  },
+  {
+    navTitle: "Radar de Estoque",
+    title: "Radar de Estoque e Preço",
+    level: "Fácil · OR + LIMIT",
+    boss: false,
+    inferred: true,
+    statement: 'Encontre os produtos que estejam em situação de atenção: estoque abaixo de 50 unidades OU preço abaixo de R$ 200,00. Exiba nome, estoque e preço. Ordene pelo estoque, do menor para o maior, e limite o resultado às 10 primeiras linhas.',
+    sql: `SELECT
+    nome,
+    estoque,
+    preco
+FROM produtos
+WHERE estoque < 50 OR preco < 200
+ORDER BY estoque ASC
+LIMIT 10;`,
+    columns: ["nome", "estoque", "preco"],
+    rows: [
+      ["Guarda-Roupa 4 Portas","14","3,673.08"],
+      ["GPS Automotivo Premium","33","1,564.83"],
+      ["Roteador WiFi Max","41","2,148.18"],
+      ["Sandália Rasteira Pro","76","195.28"],
+      ["Alpargata Plus","173","130.92"]
+    ],
+    viz: function(d){
+      const items = d.rows.map(r => {
+        const estoque = parseNumber(r[1]);
+        return { label: r[0], value: estoque, display: estoque + ' un.', flag: estoque < 50 ? 'Estoque baixo' : 'Preço baixo' };
+      });
+      return vizCaption('5 produtos em alerta: estoque abaixo de 50 un. ou preço abaixo de R$ 200') + barList(items);
+    }
+  },
+  {
+    navTitle: "Clientes por Região",
+    title: "Clientes por Região",
+    level: "Fácil · DISTINCT",
+    boss: false,
+    inferred: false,
+    chipsOnly: true,
+    statement: 'Liste todos os estados únicos onde há clientes cadastrados. Ordene o resultado em ordem alfabética.',
+    sql: `SELECT DISTINCT
+    estado
+FROM clientes
+ORDER BY estado ASC;`,
+    columns: ["estado"],
+    rows: [
+      ["AC"],["AL"],["AM"],["AP"],["BA"],["CE"],["DF"],["ES"],["GO"],["MA"],
+      ["MG"],["MS"],["MT"],["PA"],["PB"],["PE"],["PI"],["PR"],["RJ"],["RN"],
+      ["RO"],["RR"],["RS"],["SC"],["SE"],["SP"],["TO"]
+    ],
+    viz: function(d){
+      const segments = Object.keys(REGIONS).map(name => ({ label: name, value: REGIONS[name].length, color: REGION_COLORS[name] }));
+      return vizCaption('27 estados com clientes cadastrados, agrupados por região do Brasil') + donut(segments, '27', 'estados') + regionChips();
+    }
+  },
+  {
+    navTitle: "Relatório de Pedidos",
+    title: "Relatório de Pedidos",
+    level: "Médio · Alias + ORDER BY",
+    boss: false,
+    inferred: false,
+    statement: 'Mostre os 15 pedidos mais recentes com status "entregue". Exiba data_pedido (como "Data"), valor_total (como "Total") e status. Ordene pela data mais recente primeiro.',
+    sql: `SELECT
+    data_pedido AS "Data",
+    valor_total AS "Total",
+    status
+FROM pedidos
+WHERE status = 'entregue'
+ORDER BY data_pedido DESC
+LIMIT 15;`,
+    columns: ["Data", "Total", "status"],
+    rows: [
+      ["2026-01-28 20:18:25.000","14,317.31","entregue"],
+      ["2026-01-28 14:30:36.000","41,583.4","entregue"],
+      ["2026-01-26 13:45:03.000","19,266.42","entregue"],
+      ["2026-01-24 01:04:28.000","19,983.55","entregue"],
+      ["2026-01-17 00:47:02.000","25,364","entregue"],
+      ["2026-01-15 03:30:58.000","7,990.89","entregue"],
+      ["2026-01-14 17:16:23.000","18,966.85","entregue"],
+      ["2026-01-08 12:41:14.000","16,890.41","entregue"],
+      ["2026-01-01 06:15:25.000","40,188.41","entregue"],
+      ["2025-12-27 06:46:38.000","43,866.13","entregue"],
+      ["2025-12-20 05:37:42.000","47,536.22","entregue"],
+      ["2025-12-18 20:24:38.000","1,572.53","entregue"],
+      ["2025-12-11 12:04:46.000","39,538.53","entregue"],
+      ["2025-11-29 10:12:01.000","12,038.43","entregue"],
+      ["2025-11-28 22:44:58.000","18,523.07","entregue"]
+    ],
+    viz: function(d){
+      const items = d.rows.map(r => {
+        const parts = r[0].slice(0, 10).split('-');
+        return { label: parts[2] + '/' + parts[1], value: parseNumber(r[1]), display: 'R$ ' + r[1] };
+      });
+      return vizCaption('Valor total dos 15 pedidos entregues mais recentes') + barList(items);
+    }
+  },
+  {
+    navTitle: "Produtos em Destaque",
+    title: "Produtos em Destaque (Desafio Avançado)",
+    level: "Avançado · Lógica combinada",
+    boss: false,
+    inferred: false,
+    statement: 'Encontre produtos que sejam: (marca "Samsung" E preço > 1000) OU (marca "Sony" E estoque > 100). Mostre nome, marca, preço e estoque. Ordene por preço, do maior para o menor.',
+    sql: `SELECT
+    nome,
+    marca,
+    preco,
+    estoque
+FROM produtos
+WHERE (marca = 'Samsung' AND preco > 1000)
+   OR (marca = 'Sony' AND estoque > 100)
+ORDER BY preco DESC;`,
+    columns: ["nome", "marca", "preco", "estoque"],
+    rows: [
+      ["Smart TV 65\" Lite","Samsung","3,766.18","439"],
+      ["Carregador Wireless Basic","Samsung","2,843.56","440"],
+      ["Soundbar Basic","Sony","1,141.8","314"]
+    ],
+    viz: function(d){
+      const items = d.rows.map(r => ({ label: r[0] + ' (' + r[1] + ')', value: parseNumber(r[2]), display: 'R$ ' + r[2] }));
+      return vizCaption('Comparativo de preço entre os 3 produtos encontrados') + barList(items);
+    }
+  },
+  {
+    navTitle: "Análise de Avaliações",
+    title: "Análise de Avaliações",
+    level: "Médio · IN + LIMIT",
+    boss: false,
+    inferred: false,
+    statement: 'Liste as 10 piores avaliações (nota = 1 ou nota = 2). Mostre nota (como "Estrelas") e comentário (como "Feedback"). Ordene pela nota, da menor para a maior.',
+    sql: `SELECT
+    nota AS "Estrelas",
+    comentario AS "Feedback"
+FROM avaliacoes
+WHERE nota IN (1, 2)
+ORDER BY nota ASC
+LIMIT 10;`,
+    columns: ["Estrelas", "Feedback"],
+    rows: [
+      ["1",""],
+      ["1","Produto falsificado! Não é original como anunciado."],
+      ["1","Não comprem! Qualidade horrível."],
+      ["1","Pior compra da minha vida. Totalmente arrependido."],
+      ["1",""],
+      ["1",""],
+      ["1","Decepção total. Nunca mais compro dessa marca."],
+      ["1","Produto não funciona. Quero meu dinheiro de volta!"],
+      ["1","Lixo total! Parou de funcionar em uma semana."],
+      ["1","Decepção total. Nunca mais compro dessa marca."]
+    ],
+    viz: function(d){
+      return vizCaption('10 avaliações mais críticas (nota 1–2), da mais baixa para a mais alta') + reviewGrid(d.rows);
+    }
+  },
+  {
+    navTitle: "Pagamentos Pendentes",
+    title: "Pagamentos Pendentes",
+    level: "Difícil · Operador ≠",
+    boss: false,
+    inferred: false,
+    statement: 'Encontre pagamentos com status diferente de "aprovado". Mostre método (como "Forma de Pagamento"), valor e status. Ordene pelo valor, do maior para o menor, limitado a 20 resultados.',
+    sql: `SELECT
+    metodo AS "Forma de Pagamento",
+    valor,
+    status
+FROM pagamentos
+WHERE status <> 'aprovado'
+ORDER BY valor DESC
+LIMIT 20;`,
+    columns: ["Forma de Pagamento", "valor", "status"],
+    rows: [
+      ["pix","75,742.72","recusado"],
+      ["cartao_debito","64,573.43","estornado"],
+      ["transferencia","58,706.42","pendente"],
+      ["boleto","57,419.44","estornado"],
+      ["transferencia","57,012.97","pendente"],
+      ["cartao_debito","52,438.37","estornado"],
+      ["cartao_debito","52,174.99","estornado"],
+      ["cartao_debito","51,050.13","recusado"],
+      ["transferencia","50,671.06","estornado"],
+      ["cartao_debito","48,625.62","recusado"],
+      ["pix","47,652.72","estornado"],
+      ["pix","46,461.34","estornado"],
+      ["boleto","44,070.32","recusado"],
+      ["boleto","41,795.51","pendente"],
+      ["transferencia","41,753.36","recusado"],
+      ["cartao_debito","41,494.95","recusado"],
+      ["cartao_credito","40,582.19","recusado"],
+      ["cartao_debito","39,930.26","recusado"],
+      ["cartao_credito","39,875.38","pendente"],
+      ["pix","39,206.35","estornado"]
+    ],
+    viz: function(d){
+      const counts = {};
+      d.rows.forEach(r => { counts[r[2]] = (counts[r[2]] || 0) + 1; });
+      const colorMap = { recusado: 'tertiary', estornado: 'primary', pendente: 'secondary' };
+      const segments = Object.keys(counts).map(k => ({ label: k.charAt(0).toUpperCase() + k.slice(1), value: counts[k], color: colorMap[k] || 'tertiary' }));
+      const top = d.rows.slice(0, 6).map(r => ({ label: r[0].replace('_',' ') + ' — ' + r[2], value: parseNumber(r[1]), display: 'R$ ' + r[1] }));
+      return vizCaption('Distribuição por status entre os 20 pagamentos não aprovados') + donut(segments, String(d.rows.length), 'pagamentos') +
+        `<div style="margin-top:22px; padding-top:20px; border-top:1px solid var(--border);">` +
+        vizCaption('6 maiores valores em aberto') + barList(top) + `</div>`;
+    }
+  },
+  {
+    navTitle: "Relatório Completo",
+    title: "Relatório Completo (Boss Final!)",
+    level: "Boss Final · Consulta completa",
+    boss: true,
+    inferred: false,
+    statement: 'Crie uma consulta que mostre nome do produto (como "Produto"), marca (como "Fabricante"), preço (como "Preço (R$)") e estoque (como "Qtd Disponível"). Filtre por marca = "Samsung" OU "LG" OU "Sony", com preço entre 1.000 e 5.000 (inclusive) e estoque maior que 0. Ordene por marca (A-Z) e depois por preço (menor para maior). Limite aos 20 primeiros resultados.',
+    sql: `SELECT
+    nome AS "Produto",
+    marca AS "Fabricante",
+    preco AS "Preço (R$)",
+    estoque AS "Qtd Disponível"
+FROM produtos
+WHERE (marca = 'Samsung' OR marca = 'LG' OR marca = 'Sony')
+  AND preco >= 1000
+  AND preco <= 5000
+  AND estoque > 0
+ORDER BY marca ASC, preco ASC
+LIMIT 20;`,
+    columns: ["Produto", "Fabricante", "Preço (R$)", "Qtd Disponível"],
+    rows: [
+      ["Fone de Ouvido com Fio Basic","LG","3,940.09","430"],
+      ["Carregador Wireless Basic","Samsung","2,843.56","440"],
+      ["Smart TV 65\" Lite","Samsung","3,766.18","439"],
+      ["Soundbar Basic","Sony","1,141.8","314"]
+    ],
+    viz: function(d){
+      const items = d.rows.map(r => ({ label: r[0] + ' · ' + r[1], value: parseNumber(r[2]), display: 'R$ ' + r[2] }));
+      return vizCaption('Preço dos 4 produtos filtrados (Samsung, LG e Sony), agrupados por fabricante') + barList(items);
+    }
+  }
+];
+
+const STATUS_COLORS = {
+  entregue:"secondary", aprovado:"secondary", concluido:"secondary", completo:"secondary",
+  pendente:"primary",
+  recusado:"tertiary", estornado:"tertiary", cancelado:"tertiary"
+};
+
+const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+let current = 0;
+const visited = new Set();
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+}
+
+function highlightSQL(sql){
+  const keywords = ["SELECT","DISTINCT","FROM","WHERE","AND","OR","AS","IN","NOT","ORDER BY","ASC","DESC","LIMIT","GROUP BY","LIKE","NULL"];
+  keywords.sort((a,b)=>b.length-a.length);
+  const pattern = new RegExp(
+    "(--[^\\n]*)" + "|" +
+    "('(?:[^']|'')*')" + "|" +
+    "\\b(" + keywords.join("|") + ")\\b" + "|" +
+    "(\\b\\d+(?:\\.\\d+)?\\b)",
+    "gi"
+  );
+  const escaped = escapeHtml(sql);
+  return escaped.replace(pattern, (m, comment, str, kw, num) => {
+    if (comment) return `<span class="tok-comment">${comment}</span>`;
+    if (str) return `<span class="tok-string">${str}</span>`;
+    if (kw) return `<span class="tok-keyword">${kw.toUpperCase()}</span>`;
+    if (num) return `<span class="tok-number">${num}</span>`;
+    return m;
+  });
+}
+
+function renderCell(colName, value){
+  if (value === "") return `<span class="empty">—</span>`;
+  if (colName.toLowerCase() === "status"){
+    const key = value.toLowerCase();
+    const cls = STATUS_COLORS[key] || "tertiary";
+    return `<span class="badge badge-${cls}">${escapeHtml(value)}</span>`;
+  }
+  if (colName === "Estrelas"){
+    return `<span class="star-val">★ ${escapeHtml(value)}</span>`;
+  }
+  return escapeHtml(value);
+}
+
+function buildTableHtml(d){
+  if (d.chipsOnly){
+    return `<div class="chip-grid">${d.rows.map(r => `<span class="chip">${escapeHtml(r[0])}</span>`).join("")}</div>`;
+  }
+  const thead = "<thead><tr>" + d.columns.map(c => `<th>${escapeHtml(c)}</th>`).join("") + "</tr></thead>";
+  const tbody = "<tbody>" + d.rows.map(r =>
+    "<tr>" + r.map((v, i) => `<td>${renderCell(d.columns[i], v)}</td>`).join("") + "</tr>"
+  ).join("") + "</tbody>";
+  return `<div class="table-wrap"><table>${thead}${tbody}</table></div>`;
+}
+
+function buildStations(){
+  const nav = document.getElementById("stations");
+  nav.innerHTML = data.map((d, i) => `
+    <li class="station${d.boss ? " boss" : ""}" data-index="${i}" data-search="${escapeHtml((d.navTitle + " " + d.level).toLowerCase())}">
+      <button class="station-btn" type="button" onclick="selectStation(${i})">
+        <span class="station-node">${d.boss ? "★" : String(i + 1).padStart(2, "0")}</span>
+        <span class="station-info">
+          <span class="station-title">${escapeHtml(d.navTitle)}</span>
+          <span class="station-level ${levelClass(d)}">${escapeHtml(d.level.split(" · ")[0])}</span>
+        </span>
+      </button>
+    </li>`).join("");
+}
+
+function levelClass(d){
+  if (d.boss) return "lvl-boss";
+  if (d.level.startsWith("Fácil")) return "lvl-easy";
+  return "lvl-mid";
+}
+
+function selectStation(i){
+  current = i;
+  render();
+}
+
+function animateNumber(el, target, duration){
+  duration = duration || 650;
+  if (REDUCE_MOTION){ el.textContent = target; return; }
+  const startTime = performance.now();
+  function tick(now){
+    const p = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(eased * target);
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function animateBars(){
+  document.querySelectorAll("#vizPane .bar-fill").forEach(el => {
+    const target = el.dataset.target;
+    if (REDUCE_MOTION){ el.style.width = target + "%"; return; }
+    requestAnimationFrame(() => { requestAnimationFrame(() => { el.style.width = target + "%"; }); });
+  });
+}
+
+function setTab(tab){
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+  document.getElementById("vizPane").style.display = tab === "viz" ? "" : "none";
+  document.getElementById("tablePane").style.display = tab === "table" ? "" : "none";
+  if (tab === "viz") animateBars();
+}
+
+function render(){
+  const d = data[current];
+
+  document.getElementById("stageTitle").textContent = d.title;
+  document.getElementById("stageKicker").textContent = d.level;
+  document.getElementById("stationPill").textContent = `Estação ${current + 1} de ${data.length}`;
+
+  const statementEl = document.getElementById("statement");
+  statementEl.innerHTML = escapeHtml(d.statement) +
+    (d.inferred ? '<br><span class="inferred-tag">Enunciado reconstruído a partir da query original</span>' : "");
+
+  document.getElementById("sqlCode").innerHTML = highlightSQL(d.sql);
+
+  document.getElementById("vizPane").innerHTML = d.viz(d);
+  document.getElementById("tablePane").innerHTML = buildTableHtml(d);
+  document.getElementById("rowCount").textContent = d.rows.length + (d.rows.length === 1 ? " linha" : " linhas");
+  setTab("viz");
+
+  document.querySelectorAll(".station").forEach((el, i) => el.classList.toggle("active", i === current));
+
+  document.getElementById("progressCount").textContent = `Estação ${current + 1} de ${data.length}`;
+  document.getElementById("progressFill").style.width = ((current + 1) / data.length * 100) + "%";
+
+  visited.add(current);
+
+  animateNumber(document.getElementById("statTotal"), data.length);
+  animateNumber(document.getElementById("statVisited"), visited.size);
+  animateNumber(document.getElementById("statRows"), d.rows.length);
+
+  const lvlEl = document.getElementById("statLevel");
+  lvlEl.textContent = d.boss ? "Boss Final" : d.level.split(" · ")[0];
+  const lvlIcon = document.getElementById("statLevelIcon");
+  lvlIcon.className = "stat-icon " + (d.boss ? "i-tertiary" : (d.level.startsWith("Fácil") ? "i-secondary" : "i-primary"));
+
+  document.querySelectorAll(".stage-content .reveal").forEach(el => {
+    el.classList.remove("is-visible");
+    void el.offsetWidth;
+    el.classList.add("is-visible");
+  });
+
+  window.scrollTo({ top: 0, behavior: REDUCE_MOTION ? "auto" : "smooth" });
+}
+
+document.getElementById("copyBtn").addEventListener("click", () => {
+  const btn = document.getElementById("copyBtn");
+  const label = document.getElementById("copyLabel");
+  navigator.clipboard.writeText(data[current].sql).then(() => {
+    const old = label.textContent;
+    label.textContent = "Copiado!";
+    btn.classList.add("copied");
+    setTimeout(() => { label.textContent = old; btn.classList.remove("copied"); }, 1500);
+  }).catch(() => {
+    label.textContent = "Não foi possível copiar";
+    setTimeout(() => { label.textContent = "Copiar"; }, 1500);
+  });
+});
+
+document.getElementById("stationSearch").addEventListener("input", (e) => {
+  const q = e.target.value.toLowerCase().trim();
+  document.querySelectorAll(".station").forEach(li => {
+    const match = li.dataset.search.includes(q);
+    li.classList.toggle("hidden", !match);
+  });
+});
+
+document.querySelectorAll(".tab-btn").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting){
+      entry.target.classList.add("is-visible");
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+
+buildStations();
+render();
+document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
