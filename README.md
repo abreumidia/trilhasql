@@ -1,6 +1,6 @@
 # SQL Learning Journey
 
-Este repositório reúne todos os exercícios que resolvi durante meus estudos de SQL.
+Este repositório reúne todos os exercícios que resolvi durante meus estudos de SQL em uma Trilha SQL da minha pós graduação em Engenharia de Dados pela Faculdade Anhaguera.
 
 ## Conteúdos
 
